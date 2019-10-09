@@ -1,9 +1,6 @@
 package com.example.notification
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -12,6 +9,10 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.RemoteInput
+import android.app.PendingIntent
+
+
 
 object NotificationUtils {
     val CHANNEL_ID = "padrao"
@@ -40,6 +41,19 @@ object NotificationUtils {
         }
 
         return PendingIntent.getActivity(context,0,intent,0)
+    }
+    fun getContentReplyIntent(context: Context):PendingIntent?{
+        val resultIntent = Intent(context, NotificationDetail::class.java)
+        val stackBuilder = TaskStackBuilder.create(context)
+        // Adds the back stack for the Intent (but not the Intent itself)
+        stackBuilder.addParentStack(NotificationDetail::class.java)
+        // Adds the Intent that starts the Activity to the top of the stack
+        stackBuilder.addNextIntent(resultIntent)
+        val resultPendingIntent = stackBuilder.getPendingIntent(
+            0,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        return resultPendingIntent
     }
     fun notificationSimple(context: Context, text: String, title:String){
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
@@ -78,5 +92,37 @@ object NotificationUtils {
         val notificationManager =
             NotificationManagerCompat.from(context)
         notificationManager.notify(2,notificationBuilder.build())
+    }
+
+    fun notificationWithReply(context: Context, text: String, title:String){
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            createNotificationChannel(context)
+        }
+
+        val KEY_TEXT_REPLY = "key_text_reply"
+        var replyLabel: String = "Reply"
+        var remoteInput: RemoteInput = RemoteInput.Builder(KEY_TEXT_REPLY).run {
+            setLabel(replyLabel)
+            build()
+        }
+
+
+        val action =
+            NotificationCompat.Action.Builder(R.drawable.ic_send,"teste", getContentReplyIntent(context))
+                .addRemoteInput(remoteInput)
+                .build()
+
+        val notificationBuilder =
+            NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_favorite)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setColor(ActivityCompat.getColor(context,R.color.colorAccent))
+                .setDefaults(Notification.DEFAULT_ALL)
+                .addAction(action)
+        val notificationManager = NotificationManagerCompat.from(context)
+        notificationManager.notify(3,notificationBuilder.build())
     }
 }

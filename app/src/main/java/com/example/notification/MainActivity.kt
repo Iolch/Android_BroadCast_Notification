@@ -28,5 +28,14 @@ class MainActivity : AppCompatActivity() {
         btnAction.setOnClickListener {
             NotificationUtils.notificationWithAction(this)
         }
+        btnReply.setOnClickListener {
+            NotificationUtils.notificationWithReply(this, "Eai parca", "Michal")
+        }
+    }
+    override fun onDestroy() {
+        if(receiver != null){
+            unregisterReceiver(receiver)
+        }
+        super.onDestroy()
     }
 }
